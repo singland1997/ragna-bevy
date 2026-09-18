@@ -4,7 +4,17 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-bevy = { version = "0.14", default-features = true }
+bevy = { version = "0.14", default-features = false, features = [
+    "bevy_winit",
+    "bevy_render",
+    "bevy_core_pipeline",
+    "bevy_sprite",
+    "bevy_text",
+    "bevy_ui",
+    "png",
+    "x11",
+    "wayland",
+]}
 
 [patch.crates-io]
 # Force a pre-edition-2024 release to avoid requiring a newer cargo
