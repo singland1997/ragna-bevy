@@ -5,3 +5,7 @@ edition = "2021"
 
 [dependencies]
 bevy = { version = "0.14", default-features = true }
+
+[patch.crates-io]
+# Force a pre-edition-2024 release to avoid requiring a newer cargo
+constant_time_eq = "=0.4.1"
