@@ -17,5 +17,5 @@ bevy = { version = "0.14", default-features = false, features = [
 ]}
 
 [patch.crates-io]
-# Force a pre-edition-2024 release to avoid requiring a newer cargo
-constant_time_eq = "=0.4.1"
+# Replace with local shim to avoid crates requiring edition 2024
+constant_time_eq = { path = "vendor/constant_time_eq" }
