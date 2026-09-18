@@ -78,9 +78,10 @@ fn cast_projectile(
             Name::new("Projectile: Bolt"),
         ));
         // Reset cooldown
+        let cd = skill.base_cooldown;
         skill
             .cooldown
-            .set_duration(bevy::utils::Duration::from_secs_f32(skill.base_cooldown));
+            .set_duration(bevy::utils::Duration::from_secs_f32(cd));
         skill.cooldown.reset();
     } else {
         // Keep ticking so we don't freeze timers if no input
