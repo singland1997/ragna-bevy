@@ -153,16 +153,18 @@ fn update_hp_bar(
 fn update_texts(
     progression: Res<Progression>,
     skill: Res<SkillState>,
-    mut q_lvl: Query<&mut Text, With<LevelText>>,
-    mut q_cd: Query<&mut Text, With<CooldownText>>,
+    mut texts: ParamSet<(
+        Query<&mut Text, With<LevelText>>,
+        Query<&mut Text, With<CooldownText>>,
+    )>,
 ) {
-    if let Ok(mut txt) = q_lvl.get_single_mut() {
+    if let Ok(mut txt) = texts.p0().get_single_mut() {
         txt.sections[0].value = format!(
             "Lvl {}  XP {}/{}",
             progression.level, progression.xp, progression.xp_to_next
         );
     }
-    if let Ok(mut txt) = q_cd.get_single_mut() {
+    if let Ok(mut txt) = texts.p1().get_single_mut() {
         if skill.cooldown.finished() {
             txt.sections[0].value = "Q: Ready".to_string();
         } else {
