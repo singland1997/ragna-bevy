@@ -4,15 +4,16 @@ A small, desktop-only, top‑down prototype made with Rust and Bevy that capture
 
 This is a learning/portfolio MVP, not a commercial game or RO clone.
 
-### What’s included (MVP)
+### What’s included (Phase 2)
 - Window titled “Asteria Meadow”
-- Simple orthographic 2D tile map (grass/path/walls); walls block movement
-- Player movement with WASD/arrow keys; 4‑direction facing
-- One NPC who shows a dialog when you’re nearby and press E/Space
-- One enemy (a slime) that damages the player on contact and can die
-- Gaining XP on kill, with a basic level‑up curve (shown in HUD)
-- One active skill on Q (a short‑lived projectile) with cooldown
-- HUD showing HP bar, level, XP, and skill cooldown
+- Orthographic 2D tile map (grass/path/walls) with simple color variation; walls + props block movement
+- Player movement (WASD/arrows) with 4‑direction facing and a tiny bobbing “idle/walk” feel
+- One NPC who gives a mini‑quest (“defeat 5 slimes”) via E/Space; progress shown in HUD
+- Enemies chase in aggro range; contact damage on cooldown; death flash and respawn after a delay
+- Melee attack on J or Left Mouse (short swing/flash + small knockback); floating damage numbers
+- One active skill on Q (projectile) with cooldown
+- Player death/respawn loop (brief message → respawn at start)
+- HUD: clearer HP bar, XP bar, cooldown text, quest line; quick controls banner that fades
 
 All art is original placeholders (colored rectangles/squares generated at runtime).
 
@@ -39,22 +40,27 @@ Tested against Bevy 0.14 on Linux. First build can take a while (Bevy compiles m
 ### Controls
 - Movement: WASD or Arrow Keys
 - Interact (NPC): E or Space
-- Skill: Q
+- Melee: J or Left Mouse
+- Skill: Q (projectile)
 - Quit: close the window normally
 
 ### Project structure
 - `src/main.rs`: App setup, window, camera, and shared resources
-- `src/map.rs`: Hand‑rolled tile map, wall grid, world↔map helpers
-- `src/player.rs`: Player component, movement, facing, camera follow, contact damage cooldown
-- `src/npc.rs`: NPC spawn and proximity interaction to open/close dialog
-- `src/enemy.rs`: Enemy spawn, contact damage to player, death + XP grant
+- `src/map.rs`: Hand‑rolled tile map, variation, props/trees colliders, simple gate that opens after quest
+- `src/player.rs`: Player component, movement + facing, camera follow, bobbing, melee cooldown, death/respawn
+- `src/npc.rs`: NPC + quest state (“defeat N”), dialogue text
+- `src/enemy.rs`: Enemy AI (chase), contact damage, flash/knockback, death/respawn, XP/quest progress
 - `src/skills.rs`: One skill (projectile) with cooldown and lifetime
-- `src/combat.rs`: Projectile movement and hit detection vs. enemy
-- `src/ui.rs`: HUD (HP bar, Level/XP, cooldown text) + dialog overlay
+- `src/combat.rs`: Projectile + melee hit detection, knockback, floating damage numbers
+- `src/ui.rs`: HUD (HP/XP bars, Level/XP/Quest, cooldown text), dialog overlay, controls hint, death overlay
+
+### Notes and next steps
+- Visuals are original shapes/outlines and simple effects; no proprietary assets.
+- If you want crisp pixel art, we can add tiny PNGs and sprite flipping/animations in a follow‑up.
 
 ### Roadmap (post‑MVP ideas)
 - Better movement feel (acceleration, diagonal speed clamping, animation)
-- Spritesheets and simple 4‑dir animations
+- Spritesheets and simple 4‑dir animations with idle/walk cycles
 - Multiple NPCs with basic branching dialog
 - More enemy behaviors and damage feedback (hit flashes, numbers)
 - Maps loaded from a lightweight format (RON/JSON) with editor tools

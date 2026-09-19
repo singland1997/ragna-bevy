@@ -30,6 +30,12 @@ pub struct DialogState {
     pub text: String,
 }
 
+#[derive(Resource, Default)]
+pub struct DeathState {
+    pub dead: bool,
+    pub timer: Timer,
+}
+
 fn main() {
     App::new()
         .insert_resource(ClearColor(Color::srgb(0.05, 0.07, 0.10)))
@@ -39,6 +45,10 @@ fn main() {
             xp_to_next: 10,
         })
         .insert_resource(DialogState::default())
+        .insert_resource(DeathState {
+            dead: false,
+            timer: Timer::from_seconds(2.0, TimerMode::Once),
+        })
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: GAME_TITLE.to_string(),

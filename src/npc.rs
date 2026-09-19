@@ -1,18 +1,27 @@
 use bevy::prelude::*;
 use crate::map::{self, TILE_SIZE};
 use crate::player::Player;
-use crate::DialogState;
+use crate::{DialogState, Progression};
 
 #[derive(Component)]
 pub struct Npc {
     pub name: &'static str,
 }
 
+#[derive(Resource, Default)]
+pub struct QuestState {
+    pub accepted: bool,
+    pub target: u32,
+    pub progress: u32,
+    pub completed: bool,
+}
+
 pub struct NpcPlugin;
 
 impl Plugin for NpcPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, spawn_npc)
+        app.init_resource::<QuestState>()
+            .add_systems(Startup, spawn_npc)
             .add_systems(Update, handle_interact);
     }
 }
@@ -38,6 +47,8 @@ fn spawn_npc(mut commands: Commands) {
 fn handle_interact(
     keyboard: Res<ButtonInput<KeyCode>>,
     mut dialog: ResMut<DialogState>,
+    mut quest: ResMut<QuestState>,
+    mut progression: ResMut<Progression>,
     q_player: Query<&Transform, With<Player>>,
     q_npc: Query<(&Transform, &Npc)>,
 ) {
@@ -52,15 +63,30 @@ fn handle_interact(
             .distance(npc_tf.translation.truncate());
         let near = dist <= TILE_SIZE * 1.2;
         if near && (keyboard.just_pressed(KeyCode::KeyE) || keyboard.just_pressed(KeyCode::Space)) {
+            dialog.open = !dialog.open;
             if dialog.open {
-                dialog.open = false;
-                dialog.text.clear();
+                // Dialogue depending on quest state
+                if !quest.accepted && !quest.completed {
+                    quest.accepted = true;
+                    quest.target = 5;
+                    quest.progress = 0;
+                    dialog.text = format!(
+                        "{}: Welcome to Asteria Meadow!\nI have a task for you: defeat {} slimes.\nReturn when done for a small reward.",
+                        npc.name, quest.target
+                    );
+                } else if quest.accepted && !quest.completed {
+                    dialog.text = format!(
+                        "{}: Progress: {}/{}. Keep going!",
+                        npc.name, quest.progress, quest.target
+                    );
+                } else if quest.completed {
+                    dialog.text = format!("{}: Well done! Take this bonus XP.", npc.name);
+                    // simple one-time reward
+                    progression.xp += 10;
+                    quest.completed = false; // allow repeating lightly
+                }
             } else {
-                dialog.open = true;
-                dialog.text = format!(
-                    "{}: Welcome to Asteria Meadow!\nMove with WASD/Arrows. Press Q to use your skill.\nDefeat the slime to gain XP and level up.",
-                    npc.name
-                );
+                dialog.text.clear();
             }
         }
     }
