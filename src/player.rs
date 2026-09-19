@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy::sprite::TextureAtlas;
 use crate::map::{self, TileMap, TILE_SIZE};
-use crate::assets::GameAssets;
+use crate::assets::{GameAssets, AppStartupSet};
 
 #[derive(Component)]
 pub struct Player {
@@ -49,7 +49,7 @@ pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<PlayerStart>()
-            .add_systems(Startup, spawn_player)
+            .add_systems(Startup, spawn_player.in_set(AppStartupSet::Spawn))
             .add_systems(
                 Update,
                 (

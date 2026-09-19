@@ -3,7 +3,7 @@ use crate::map::{self, TILE_SIZE, TileMap};
 use crate::player::{Player, PlayerHitbox};
 use crate::Progression;
 use crate::npc::QuestState;
-use crate::assets::GameAssets;
+use crate::assets::{GameAssets, AppStartupSet};
 
 #[derive(Component)]
 pub struct Enemy {
@@ -52,7 +52,7 @@ pub struct EnemyPlugin;
 
 impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, spawn_enemy)
+        app.add_systems(Startup, spawn_enemy.in_set(AppStartupSet::Spawn))
             .add_systems(
                 Update,
                 (

@@ -5,9 +5,21 @@ use std::path::Path;
 
 pub struct AssetsPlugin;
 
+#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
+pub enum AppStartupSet {
+    GenerateAssets,
+    Spawn,
+}
+
 impl Plugin for AssetsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, (ensure_assets_on_disk, load_assets));
+        app.configure_sets(Startup, (AppStartupSet::GenerateAssets, AppStartupSet::Spawn).chain())
+            .add_systems(
+                Startup,
+                (ensure_assets_on_disk, load_assets)
+                    .chain()
+                    .in_set(AppStartupSet::GenerateAssets),
+            );
     }
 }
 

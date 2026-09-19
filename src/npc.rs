@@ -3,6 +3,7 @@ use crate::map::{self, TILE_SIZE};
 use crate::player::Player;
 use crate::{DialogState, Progression};
 use crate::assets::GameAssets;
+use crate::assets::AppStartupSet;
 
 #[derive(Component)]
 pub struct Npc {
@@ -28,7 +29,7 @@ pub struct NpcPlugin;
 impl Plugin for NpcPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<QuestState>()
-            .add_systems(Startup, spawn_npc)
+            .add_systems(Startup, spawn_npc.in_set(AppStartupSet::Spawn))
             .add_systems(Update, (handle_interact, update_npc_cue));
     }
 }
