@@ -37,6 +37,13 @@ cargo build
 
 Tested against Bevy 0.14 on Linux. First build can take a while (Bevy compiles many crates).
 
+### Assets
+- On first run, the game generates original placeholder PNGs under `assets/sprites/`:
+  - `player.png`: 4× 32×32 frames in one horizontal strip (order: Up, Down, Left, Right). Used as a texture atlas for facing.
+  - `npc_guide.png`: 32×32 gold NPC.
+  - `slime.png`: 32×32 purple/red blob.
+- These are simple high-contrast pixel sprites with dark outlines for readability and are not copied from any external game.
+
 ### Controls
 - Movement: WASD or Arrow Keys
 - Interact (NPC): E or Space

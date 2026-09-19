@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use crate::map::{self, TILE_SIZE};
 use crate::player::Player;
 use crate::{DialogState, Progression};
+use crate::assets::GameAssets;
 
 #[derive(Component)]
 pub struct Npc {
@@ -32,34 +33,20 @@ impl Plugin for NpcPlugin {
     }
 }
 
-fn spawn_npc(mut commands: Commands) {
+fn spawn_npc(mut commands: Commands, assets: Res<GameAssets>) {
     let tile = IVec2::new(8, 6);
     let pos = map::map_to_world(tile);
     commands
         .spawn((
             Npc { name: "Guide" },
             SpriteBundle {
-                sprite: Sprite {
-                    color: Color::srgb(0.95, 0.75, 0.18), // warm gold
-                    custom_size: Some(Vec2::splat(TILE_SIZE * 0.9)),
-                    ..Default::default()
-                },
+                texture: assets.npc_image.clone(),
                 transform: Transform::from_xyz(pos.x, pos.y, 9.0),
                 ..Default::default()
             },
             Name::new("NPC: Guide"),
         ))
         .with_children(|p| {
-            // Robe/outline
-            p.spawn(SpriteBundle {
-                sprite: Sprite {
-                    color: Color::srgb(0.1, 0.08, 0.06),
-                    custom_size: Some(Vec2::splat(TILE_SIZE * 1.02)),
-                    ..Default::default()
-                },
-                transform: Transform::from_xyz(0.0, 0.0, -0.1),
-                ..Default::default()
-            });
             // Nameplate
             p.spawn((
                 NpcNameplate,

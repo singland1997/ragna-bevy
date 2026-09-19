@@ -1,5 +1,7 @@
 use bevy::prelude::*;
+use bevy::sprite::TextureAtlas;
 use crate::map::{self, TileMap, TILE_SIZE};
+use crate::assets::GameAssets;
 
 #[derive(Component)]
 pub struct Player {
@@ -34,6 +36,9 @@ pub struct PlayerFace; // small dot indicating facing
 #[derive(Component)]
 pub struct PlayerNameplate;
 
+#[derive(Component)]
+pub struct PlayerSprite;
+
 #[derive(Resource, Default)]
 struct PlayerStart {
     pos: Vec2,
@@ -58,7 +63,7 @@ impl Plugin for PlayerPlugin {
     }
 }
 
-pub fn spawn_player(mut commands: Commands) {
+pub fn spawn_player(mut commands: Commands, assets: Res<GameAssets>) {
     let start_tile = IVec2::new(5, 6);
     let start = map::map_to_world(start_tile);
     // Save start for respawns
@@ -77,59 +82,26 @@ pub fn spawn_player(mut commands: Commands) {
             PlayerHitbox {
                 half_size: Vec2::new(TILE_SIZE * 0.35, TILE_SIZE * 0.35),
             },
-            SpriteBundle {
-                sprite: Sprite {
-                    color: Color::NONE,
-                    custom_size: Some(Vec2::splat(TILE_SIZE * 0.01)), // invisible parent
-                    ..Default::default()
-                },
+            SpatialBundle {
                 transform: Transform::from_xyz(start.x, start.y, 10.0),
                 ..Default::default()
             },
             Name::new("Player"),
         ))
         .with_children(|p| {
-            // Outline (slightly bigger dark sprite)
+            // Player atlas sprite
             p.spawn((
-                PlayerBody,
+                PlayerSprite,
                 SpriteBundle {
-                    sprite: Sprite {
-                        color: Color::srgb(0.05, 0.08, 0.10),
-                        custom_size: Some(Vec2::splat(TILE_SIZE * 0.9)),
-                        ..Default::default()
-                    },
-                    transform: Transform::from_xyz(0.0, 0.0, 0.0),
-                    ..Default::default()
-                },
-                Name::new("Player Outline"),
-            ));
-            // Body
-            p.spawn((
-                PlayerBody,
-                SpriteBundle {
-                    sprite: Sprite {
-                        color: Color::srgb(0.2, 0.8, 1.0),
-                        custom_size: Some(Vec2::splat(TILE_SIZE * 0.78)),
-                        ..Default::default()
-                    },
+                    texture: assets.player_image.clone(),
                     transform: Transform::from_xyz(0.0, 0.0, 0.1),
                     ..Default::default()
                 },
-                Name::new("Player Body"),
-            ));
-            // Face dot to indicate facing
-            p.spawn((
-                PlayerFace,
-                SpriteBundle {
-                    sprite: Sprite {
-                        color: Color::WHITE,
-                        custom_size: Some(Vec2::splat(TILE_SIZE * 0.18)),
-                        ..Default::default()
-                    },
-                    transform: Transform::from_xyz(0.0, -TILE_SIZE * 0.18, 0.2),
-                    ..Default::default()
+                TextureAtlas {
+                    layout: assets.player_layout.clone(),
+                    index: 1,
                 },
-                Name::new("Player Face"),
+                Name::new("Player Sprite"),
             ));
             // Nameplate "You"
             p.spawn((
@@ -299,28 +271,19 @@ fn update_player_visual(
     time: Res<Time>,
     keyboard: Res<ButtonInput<KeyCode>>,
     q_player: Query<(&Player, &Children)>,
-    mut sets: ParamSet<(
-        Query<&mut Transform, With<PlayerFace>>,
-        Query<&mut Transform, (With<PlayerBody>, Without<PlayerFace>)>,
-    )>,
+    mut q_sprite: Query<(&mut Transform, &mut TextureAtlas), With<PlayerSprite>>,
 ) {
     let (player, children) = match q_player.get_single() {
         Ok(v) => v,
         Err(_) => return,
     };
-    // Move face dot based on facing
-    let offset = match player.facing {
-        Facing::Up => Vec2::new(0.0, TILE_SIZE * 0.18),
-        Facing::Down => Vec2::new(0.0, -TILE_SIZE * 0.18),
-        Facing::Left => Vec2::new(-TILE_SIZE * 0.18, 0.0),
-        Facing::Right => Vec2::new(TILE_SIZE * 0.18, 0.0),
+    // Set atlas index by facing: 0=Up,1=Down,2=Left,3=Right (matches generator)
+    let idx = match player.facing {
+        Facing::Up => 0,
+        Facing::Down => 1,
+        Facing::Left => 2,
+        Facing::Right => 3,
     };
-    for &child in children.iter() {
-        if let Ok(mut tf) = sets.p0().get_mut(child) {
-            tf.translation.x = offset.x;
-            tf.translation.y = offset.y;
-        }
-    }
     // Simple bobbing when any movement key is pressed
     let moving = keyboard.any_pressed([
         KeyCode::KeyW,
@@ -338,8 +301,9 @@ fn update_player_visual(
         0.0
     };
     for &child in children.iter() {
-        if let Ok(mut tf) = sets.p1().get_mut(child) {
+        if let Ok((mut tf, mut atlas)) = q_sprite.get_mut(child) {
             tf.translation.y = bob;
+            atlas.index = idx;
         }
     }
 }

@@ -5,6 +5,7 @@ mod enemy;
 mod combat;
 mod skills;
 mod ui;
+mod assets;
 
 use bevy::prelude::*;
 use combat::CombatPlugin;
@@ -14,6 +15,7 @@ use npc::NpcPlugin;
 use player::PlayerPlugin;
 use skills::SkillsPlugin;
 use ui::UiPlugin;
+use assets::AssetsPlugin;
 
 pub const GAME_TITLE: &str = "Asteria Meadow";
 
@@ -58,6 +60,7 @@ fn main() {
         }))
         .add_systems(Startup, setup_camera)
         .add_plugins((
+            AssetsPlugin,
             MapPlugin,
             PlayerPlugin,
             NpcPlugin,

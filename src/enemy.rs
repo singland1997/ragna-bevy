@@ -3,6 +3,7 @@ use crate::map::{self, TILE_SIZE, TileMap};
 use crate::player::{Player, PlayerHitbox};
 use crate::Progression;
 use crate::npc::QuestState;
+use crate::assets::GameAssets;
 
 #[derive(Component)]
 pub struct Enemy {
@@ -66,10 +67,10 @@ impl Plugin for EnemyPlugin {
     }
 }
 
-fn spawn_enemy(mut commands: Commands) {
+fn spawn_enemy(mut commands: Commands, assets: Res<GameAssets>) {
     let tile = IVec2::new(20, 10);
     let pos = map::map_to_world(tile);
-    spawn_one_enemy(&mut commands, pos);
+    spawn_one_enemy(&mut commands, pos, &assets);
     // Spawner to bring it back after death
     commands.spawn((
         EnemySpawner {
@@ -88,7 +89,7 @@ fn spawn_enemy(mut commands: Commands) {
     ));
 }
 
-fn spawn_one_enemy(commands: &mut Commands, pos: Vec2) {
+fn spawn_one_enemy(commands: &mut Commands, pos: Vec2, assets: &GameAssets) {
     commands
         .spawn((
             Enemy {
@@ -107,25 +108,17 @@ fn spawn_one_enemy(commands: &mut Commands, pos: Vec2) {
                 knockback: Vec2::ZERO,
                 knockback_timer: Timer::from_seconds(0.0, TimerMode::Once),
             },
-            SpriteBundle {
-                sprite: Sprite {
-                    color: Color::srgb(0.8, 0.2, 0.5),
-                    custom_size: Some(Vec2::splat(TILE_SIZE * 0.9)),
-                    ..Default::default()
-                },
+            SpatialBundle {
                 transform: Transform::from_xyz(pos.x, pos.y, 8.0),
                 ..Default::default()
             },
             Name::new("Enemy: Slime"),
         ))
         .with_children(|p| {
+            // Main body from texture
             p.spawn(SpriteBundle {
-                sprite: Sprite {
-                    color: Color::srgb(0.1, 0.05, 0.09),
-                    custom_size: Some(Vec2::splat(TILE_SIZE * 1.04)),
-                    ..Default::default()
-                },
-                transform: Transform::from_xyz(0.0, 0.0, -0.1),
+                texture: assets.slime_image.clone(),
+                transform: Transform::from_xyz(0.0, 0.0, 0.0),
                 ..Default::default()
             });
             p.spawn((
@@ -328,6 +321,7 @@ fn tick_enemy_effects(
 fn respawn_enemies(
     time: Res<Time>,
     mut commands: Commands,
+    assets: Res<GameAssets>,
     mut q_spawners: Query<(&Transform, &mut EnemySpawner)>,
     q_enemies: Query<&Transform, With<Enemy>>,
 ) {
@@ -340,7 +334,7 @@ fn respawn_enemies(
                 .iter()
                 .any(|e_tf| e_tf.translation.truncate().distance(spot) < TILE_SIZE * 0.5);
             if !occupied {
-                spawn_one_enemy(&mut commands, spot);
+                spawn_one_enemy(&mut commands, spot, &assets);
             }
         }
     }

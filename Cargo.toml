@@ -14,6 +14,7 @@ bevy = { version = "0.14", default-features = false, features = [
     "png",
     "x11",
 ]}
+image = { version = "0.25", default-features = false, features = ["png"] }
 
 [patch.crates-io]
 # Replace with local shim to avoid crates requiring edition 2024
