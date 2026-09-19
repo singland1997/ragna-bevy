@@ -1,0 +1,21 @@
+[package]
+name = "asteria_meadow"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bevy = { version = "0.14", default-features = false, features = [
+    "bevy_winit",
+    "bevy_render",
+    "bevy_core_pipeline",
+    "bevy_sprite",
+    "bevy_text",
+    "bevy_ui",
+    "png",
+    "x11",
+]}
+image = { version = "0.25", default-features = false, features = ["png"] }
+
+[patch.crates-io]
+# Replace with local shim to avoid crates requiring edition 2024
+constant_time_eq = { path = "vendor/constant_time_eq" }
