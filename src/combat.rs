@@ -135,7 +135,6 @@ fn melee_attack(
 fn melee_hits_enemy(
     time: Res<Time>,
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
     mut q_enemy: Query<(&Transform, &EnemyHitbox, &mut Enemy, &mut crate::enemy::EnemyAI)>,
     mut q_melee: Query<(Entity, &Transform, &mut MeleeHitbox)>,
 ) {
@@ -156,7 +155,7 @@ fn melee_hits_enemy(
                 ai.knockback_timer = Timer::from_seconds(0.08, TimerMode::Once);
                 ai.knockback_timer.reset();
                 // Floating damage number
-                spawn_damage_number(&mut commands, &asset_server, enemy_tf.translation.truncate(), melee.damage);
+                spawn_damage_number(&mut commands, enemy_tf.translation.truncate(), melee.damage);
                 any_hit = true;
             }
         }
@@ -172,24 +171,40 @@ struct DamageNumber {
     velocity: Vec2,
 }
 
-fn spawn_damage_number(
-    commands: &mut Commands,
-    asset_server: &AssetServer,
-    pos: Vec2,
-    amount: i32,
-) {
-    let text_style = TextStyle {
-        font: asset_server.load("fonts/FiraSans-Bold.ttf"),
-        font_size: 18.0,
-        color: Color::srgb(1.0, 0.9, 0.3),
+fn spawn_damage_number(commands: &mut Commands, pos: Vec2, amount: i32) {
+    // Outline shadow (black)
+    let shadow_style = TextStyle {
+        font_size: 22.0,
+        color: Color::BLACK,
+        ..Default::default()
     };
+    // Foreground (bright)
+    let fg_style = TextStyle {
+        font_size: 22.0,
+        color: Color::srgb(1.0, 0.95, 0.6),
+        ..Default::default()
+    };
+    // Shadow
     commands.spawn((
         DamageNumber {
             timer: Timer::from_seconds(0.6, TimerMode::Once),
             velocity: Vec2::new(0.0, 40.0),
         },
         Text2dBundle {
-            text: Text::from_section(format!("{}", amount), text_style),
+            text: Text::from_section(format!("{}", amount), shadow_style),
+            transform: Transform::from_xyz(pos.x + 1.0, pos.y + TILE_SIZE * 0.6 - 1.0, 29.0),
+            ..Default::default()
+        },
+        Name::new("Damage Number (Shadow)"),
+    ));
+    // Foreground
+    commands.spawn((
+        DamageNumber {
+            timer: Timer::from_seconds(0.6, TimerMode::Once),
+            velocity: Vec2::new(0.0, 40.0),
+        },
+        Text2dBundle {
+            text: Text::from_section(format!("{}", amount), fg_style),
             transform: Transform::from_xyz(pos.x, pos.y + TILE_SIZE * 0.6, 30.0),
             ..Default::default()
         },

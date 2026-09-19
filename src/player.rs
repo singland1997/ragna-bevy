@@ -31,6 +31,9 @@ pub struct PlayerBody; // visual parent for body
 #[derive(Component)]
 pub struct PlayerFace; // small dot indicating facing
 
+#[derive(Component)]
+pub struct PlayerNameplate;
+
 #[derive(Resource, Default)]
 struct PlayerStart {
     pos: Vec2,
@@ -127,6 +130,22 @@ pub fn spawn_player(mut commands: Commands) {
                     ..Default::default()
                 },
                 Name::new("Player Face"),
+            ));
+            // Nameplate "You"
+            p.spawn((
+                PlayerNameplate,
+                Text2dBundle {
+                    text: Text::from_section(
+                        "You",
+                        TextStyle {
+                            font_size: 16.0,
+                            color: Color::srgb(0.7, 0.9, 1.0),
+                            ..Default::default()
+                        },
+                    ),
+                    transform: Transform::from_xyz(0.0, TILE_SIZE * 0.95, 20.0),
+                    ..Default::default()
+                },
             ));
         });
 }

@@ -68,35 +68,38 @@ fn setup_ui(mut commands: Commands) {
             Name::new("HUD Root"),
         ))
         .with_children(|parent| {
-            // HP bar
-            parent
-                .spawn((
+            // HP label + bar
+            parent.spawn(TextBundle::from_section(
+                "HP",
+                TextStyle { font_size: 14.0, color: Color::WHITE, ..Default::default() },
+            ));
+            parent.spawn((
+                NodeBundle {
+                    style: Style {
+                        width: Val::Px(HUD_BAR_WIDTH),
+                        height: Val::Px(HUD_BAR_HEIGHT),
+                        ..Default::default()
+                    },
+                    background_color: BackgroundColor(Color::srgb(0.2, 0.0, 0.02)),
+                    ..Default::default()
+                },
+                Name::new("HP Bar Background"),
+            ))
+            .with_children(|bar| {
+                bar.spawn((
                     NodeBundle {
                         style: Style {
                             width: Val::Px(HUD_BAR_WIDTH),
                             height: Val::Px(HUD_BAR_HEIGHT),
                             ..Default::default()
                         },
-                        background_color: BackgroundColor(Color::srgb(0.2, 0.0, 0.02)),
+                        background_color: BackgroundColor(Color::srgb(0.8, 0.15, 0.2)),
                         ..Default::default()
                     },
-                    Name::new("HP Bar Background"),
-                ))
-                .with_children(|bar| {
-                    bar.spawn((
-                        NodeBundle {
-                            style: Style {
-                                width: Val::Px(HUD_BAR_WIDTH),
-                                height: Val::Px(HUD_BAR_HEIGHT),
-                                ..Default::default()
-                            },
-                            background_color: BackgroundColor(Color::srgb(0.8, 0.15, 0.2)),
-                            ..Default::default()
-                        },
-                        HpBarFg,
-                        Name::new("HP Bar Fill"),
-                    ));
-                });
+                    HpBarFg,
+                    Name::new("HP Bar Fill"),
+                ));
+            });
 
             // Level + XP text
             parent.spawn((
@@ -112,7 +115,11 @@ fn setup_ui(mut commands: Commands) {
                 Name::new("Level/XP Text"),
             ));
 
-            // XP bar
+            // XP label + bar
+            parent.spawn(TextBundle::from_section(
+                "XP",
+                TextStyle { font_size: 14.0, color: Color::WHITE, ..Default::default() },
+            ));
             parent
                 .spawn((
                     NodeBundle {

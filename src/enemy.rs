@@ -18,6 +18,12 @@ pub struct EnemyHitbox {
 }
 
 #[derive(Component)]
+pub struct EnemyLabel;
+
+#[derive(Component)]
+pub struct EnemyQuestMarker;
+
+#[derive(Component)]
 pub struct EnemyAI {
     pub speed: f32,
     pub aggro_range: f32,
@@ -54,6 +60,7 @@ impl Plugin for EnemyPlugin {
                     enemy_contact_damage.after(enemy_chase_and_attack),
                     cleanup_dead_enemies,
                     respawn_enemies,
+                    sync_enemy_markers,
                 ),
             );
     }
@@ -102,15 +109,56 @@ fn spawn_one_enemy(commands: &mut Commands, pos: Vec2) {
             },
             SpriteBundle {
                 sprite: Sprite {
-                    color: Color::srgb(0.6, 0.9, 0.95),
-                    custom_size: Some(Vec2::splat(TILE_SIZE * 0.8)),
+                    color: Color::srgb(0.8, 0.2, 0.5),
+                    custom_size: Some(Vec2::splat(TILE_SIZE * 0.9)),
                     ..Default::default()
                 },
                 transform: Transform::from_xyz(pos.x, pos.y, 8.0),
                 ..Default::default()
             },
             Name::new("Enemy: Slime"),
-        ));
+        ))
+        .with_children(|p| {
+            p.spawn(SpriteBundle {
+                sprite: Sprite {
+                    color: Color::srgb(0.1, 0.05, 0.09),
+                    custom_size: Some(Vec2::splat(TILE_SIZE * 1.04)),
+                    ..Default::default()
+                },
+                transform: Transform::from_xyz(0.0, 0.0, -0.1),
+                ..Default::default()
+            });
+            p.spawn((
+                EnemyLabel,
+                Text2dBundle {
+                    text: Text::from_section(
+                        "Slime",
+                        TextStyle {
+                            font_size: 14.0,
+                            color: Color::WHITE,
+                            ..Default::default()
+                        },
+                    ),
+                    transform: Transform::from_xyz(0.0, TILE_SIZE * 0.95, 20.0),
+                    ..Default::default()
+                },
+            ));
+            p.spawn((
+                EnemyQuestMarker,
+                Text2dBundle {
+                    text: Text::from_section(
+                        "●",
+                        TextStyle {
+                            font_size: 16.0,
+                            color: Color::srgb(1.0, 0.2, 0.2),
+                            ..Default::default()
+                        },
+                    ),
+                    transform: Transform::from_xyz(0.0, TILE_SIZE * 1.25, 21.0),
+                    ..Default::default()
+                },
+            ));
+        });
 }
 
 fn enemy_contact_damage(
@@ -267,7 +315,7 @@ fn tick_enemy_effects(
         if let Some(timer) = &mut enemy.flash_timer {
             timer.tick(time.delta());
             if timer.just_finished() {
-                sprite.color = Color::srgb(0.6, 0.9, 0.95);
+                sprite.color = Color::srgb(0.8, 0.2, 0.5);
                 enemy.flash_timer = None;
             } else {
                 // flash tint
@@ -295,6 +343,24 @@ fn respawn_enemies(
                 spawn_one_enemy(&mut commands, spot);
             }
         }
+    }
+}
+
+pub fn sync_enemy_markers(
+    quest: Option<Res<crate::npc::QuestState>>,
+    mut q: Query<&mut Visibility, With<EnemyQuestMarker>>,
+) {
+    let visible = if let Some(qs) = quest {
+        qs.accepted && !qs.completed
+    } else {
+        false
+    };
+    for mut vis in q.iter_mut() {
+        *vis = if visible {
+            Visibility::Visible
+        } else {
+            Visibility::Hidden
+        };
     }
 }
 

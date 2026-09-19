@@ -87,7 +87,11 @@ fn spawn_map(mut commands: Commands, mut tilemap: ResMut<TileMap>) {
             // Simple tile color variation using a deterministic hash of (x,y)
             let v = (((x * 37 + y * 17) % 7) as f32) * 0.01;
             let color = match tile_type {
-                TileType::Grass => Color::srgb(0.12 + v, 0.35 + v, 0.15 + v),
+                TileType::Grass => {
+                    // subtle checker: alternate slightly different green
+                    let c = if (x + y) % 2 == 0 { 0.02 } else { -0.0 };
+                    Color::srgb((0.12 + v + c).clamp(0.0, 1.0), (0.35 + v + c).clamp(0.0, 1.0), (0.15 + v + c).clamp(0.0, 1.0))
+                }
                 TileType::Path => Color::srgb(0.62 + v, 0.52 + v, 0.38 + v),
                 TileType::Wall => Color::srgb(0.33 + v, 0.33 + v, 0.38 + v),
             };
@@ -97,12 +101,24 @@ fn spawn_map(mut commands: Commands, mut tilemap: ResMut<TileMap>) {
             }
 
             let pos = map_to_world(tile_coord);
+            if matches!(tile_type, TileType::Wall) {
+                // Border (darker, slightly larger)
+                commands.spawn(SpriteBundle {
+                    sprite: Sprite {
+                        color: Color::srgb(0.08, 0.08, 0.1),
+                        custom_size: Some(Vec2::splat(TILE_SIZE)),
+                        ..Default::default()
+                    },
+                    transform: Transform::from_translation(Vec3::new(pos.x, pos.y, -0.1)),
+                    ..Default::default()
+                });
+            }
             commands.spawn((
                 Tile,
                 SpriteBundle {
                     sprite: Sprite {
                         color,
-                        custom_size: Some(Vec2::splat(TILE_SIZE - 1.0)),
+                        custom_size: Some(Vec2::splat(if matches!(tile_type, TileType::Wall) { TILE_SIZE - 4.0 } else { TILE_SIZE - 1.0 })),
                         ..Default::default()
                     },
                     transform: Transform::from_translation(Vec3::new(pos.x, pos.y, 0.0)),
