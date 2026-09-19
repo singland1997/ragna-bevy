@@ -76,7 +76,7 @@ fn spawn_npc(mut commands: Commands) {
                     ..Default::default()
                 },
             ));
-            // '!' cue (hidden by default)
+            // '!' cue (hidden by default) - set visibility inside the bundle to avoid duplication
             p.spawn((
                 NpcCue,
                 Text2dBundle {
@@ -89,9 +89,9 @@ fn spawn_npc(mut commands: Commands) {
                         },
                     ),
                     transform: Transform::from_xyz(0.0, TILE_SIZE * 1.4, 21.0),
+                    visibility: Visibility::Hidden,
                     ..Default::default()
                 },
-                Visibility::Hidden,
             ));
         });
 }
