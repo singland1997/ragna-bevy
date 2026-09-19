@@ -190,14 +190,20 @@ fn add_xp(progress: &mut Progression, amount: u32) {
 fn enemy_chase_and_attack(
     time: Res<Time>,
     tilemap: Res<TileMap>,
-    q_player: Query<&Transform, With<Player>>,
-    mut q_enemy: Query<(&mut Transform, &EnemyHitbox, &mut EnemyAI)>,
+    mut sets: ParamSet<(
+        Query<(&mut Transform, &EnemyHitbox, &mut EnemyAI), Without<Player>>,
+        Query<&Transform, With<Player>>,
+    )>,
 ) {
-    let player_tf = match q_player.get_single() {
-        Ok(v) => v,
-        Err(_) => return,
+    // Extract player position first to avoid overlapping ParamSet borrows
+    let player_pos = {
+        let q_player = sets.p1();
+        match q_player.get_single() {
+            Ok(tf) => tf.translation.truncate(),
+            Err(_) => return,
+        }
     };
-    for (mut tf, hit, mut ai) in q_enemy.iter_mut() {
+    for (mut tf, hit, mut ai) in sets.p0().iter_mut() {
         ai.attack_cooldown.tick(time.delta());
         // Knockback overrides movement
         if ai.knockback_timer.remaining_secs() > 0.0 {
@@ -206,7 +212,7 @@ fn enemy_chase_and_attack(
             ai.knockback_timer.tick(time.delta());
             continue;
         }
-        let to_player = player_tf.translation.truncate() - tf.translation.truncate();
+        let to_player = player_pos - tf.translation.truncate();
         let dist = to_player.length();
         if dist < ai.aggro_range && dist > 1.0 {
             let dir = to_player / dist.max(1.0);

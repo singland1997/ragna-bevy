@@ -248,16 +248,22 @@ fn aabb_overlap(a_pos: Vec2, a_half: Vec2, b_pos: Vec2, b_half: Vec2) -> bool {
 }
 
 fn follow_camera(
-    q_player: Query<&Transform, With<Player>>,
-    mut q_camera: Query<&mut Transform, (With<Camera>, Without<Player>)>,
+    mut sets: ParamSet<(
+        Query<&Transform, With<Player>>,
+        Query<&mut Transform, (With<Camera>, Without<Player>)>,
+    )>,
 ) {
-    let player_tf = match q_player.get_single() {
-        Ok(v) => v,
-        Err(_) => return,
+    // Extract player position first to avoid overlapping ParamSet borrows
+    let player_pos = {
+        let q_player = sets.p0();
+        match q_player.get_single() {
+            Ok(tf) => tf.translation,
+            Err(_) => return,
+        }
     };
-    if let Ok(mut cam_tf) = q_camera.get_single_mut() {
-        cam_tf.translation.x = player_tf.translation.x;
-        cam_tf.translation.y = player_tf.translation.y;
+    if let Ok(mut cam_tf) = sets.p1().get_single_mut() {
+        cam_tf.translation.x = player_pos.x;
+        cam_tf.translation.y = player_pos.y;
     }
 }
 
@@ -274,8 +280,10 @@ fn update_player_visual(
     time: Res<Time>,
     keyboard: Res<ButtonInput<KeyCode>>,
     q_player: Query<(&Player, &Children)>,
-    mut q_face: Query<&mut Transform, With<PlayerFace>>,
-    mut q_body: Query<&mut Transform, (With<PlayerBody>, Without<PlayerFace>)>,
+    mut sets: ParamSet<(
+        Query<&mut Transform, With<PlayerFace>>,
+        Query<&mut Transform, (With<PlayerBody>, Without<PlayerFace>)>,
+    )>,
 ) {
     let (player, children) = match q_player.get_single() {
         Ok(v) => v,
@@ -289,7 +297,7 @@ fn update_player_visual(
         Facing::Right => Vec2::new(TILE_SIZE * 0.18, 0.0),
     };
     for &child in children.iter() {
-        if let Ok(mut tf) = q_face.get_mut(child) {
+        if let Ok(mut tf) = sets.p0().get_mut(child) {
             tf.translation.x = offset.x;
             tf.translation.y = offset.y;
         }
@@ -311,7 +319,7 @@ fn update_player_visual(
         0.0
     };
     for &child in children.iter() {
-        if let Ok(mut tf) = q_body.get_mut(child) {
+        if let Ok(mut tf) = sets.p1().get_mut(child) {
             tf.translation.y = bob;
         }
     }
